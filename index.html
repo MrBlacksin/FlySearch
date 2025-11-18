@@ -270,11 +270,18 @@
             transform: scale(1.1);
         }
 
-        /* Customization Button */
-        .customize-btn {
+        /* Bottom Buttons Container */
+        .bottom-buttons {
             position: fixed;
             bottom: 20px;
             right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        /* Customization Button */
+        .customize-btn {
             padding: 12px 20px;
             background: rgba(255, 255, 255, 0.1);
             border: 1px solid var(--border-color);
@@ -286,10 +293,32 @@
             transition: all 0.3s ease;
             backdrop-filter: blur(10px);
             text-decoration: none;
-            z-index: 1000;
+            white-space: nowrap;
         }
 
         .customize-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Language Button */
+        .language-btn {
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-color);
+            border-radius: 25px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .language-btn:hover {
             background: rgba(255, 255, 255, 0.15);
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
@@ -570,6 +599,36 @@
             font-size: 12px;
         }
 
+        /* Language Modal */
+        .language-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .language-option {
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid transparent;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .language-option:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .language-option.active {
+            border-color: var(--accent-color);
+            background: rgba(66, 133, 244, 0.2);
+        }
+
         /* Footer signature */
         .footer-signature {
             text-align: center;
@@ -611,7 +670,14 @@
                 grid-template-columns: 1fr;
             }
 
-            .customize-btn {
+            .bottom-buttons {
+                flex-direction: column;
+                right: 15px;
+                bottom: 15px;
+            }
+
+            .customize-btn,
+            .language-btn {
                 padding: 10px 16px;
                 font-size: 13px;
             }
@@ -639,11 +705,15 @@
                 grid-template-columns: 1fr;
             }
 
-            .customize-btn {
+            .bottom-buttons {
+                right: 10px;
+                bottom: 10px;
+            }
+
+            .customize-btn,
+            .language-btn {
                 padding: 8px 14px;
                 font-size: 12px;
-                bottom: 15px;
-                right: 15px;
             }
 
             .modal-content {
@@ -661,7 +731,7 @@
         <!-- Header -->
         <div class="header">
             <div class="logo">FlySearch</div>
-            <div class="subtitle">Быстрый и элегантный</div>
+            <div class="subtitle" id="subtitle">Быстрый и элегантный</div>
         </div>
 
         <!-- Search Box -->
@@ -679,14 +749,17 @@
                 <!-- Только кнопка добавления -->
                 <div class="bookmark-item add-bookmark" onclick="showAddModal()">
                     <div class="bookmark-icon">+</div>
-                    <div class="bookmark-name">Добавить</div>
+                    <div class="bookmark-name" id="addBookmarkText">Добавить</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Кнопка кастомизации -->
-    <button class="customize-btn" onclick="showCustomizationModal()">Настройки FlySearch</button>
+    <!-- Контейнер для кнопок в правом нижнем углу -->
+    <div class="bottom-buttons">
+        <button class="language-btn" onclick="showLanguageModal()">🌐 Язык</button>
+        <button class="customize-btn" onclick="showCustomizationModal()" id="settingsButton">Настройки FlySearch</button>
+    </div>
 
     <!-- Modal для добавления/редактирования закладки -->
     <div class="modal" id="bookmarkModal">
@@ -694,25 +767,48 @@
             <div class="modal-title" id="modalTitle">Добавить закладку</div>
             <form id="bookmarkForm">
                 <div class="form-group">
-                    <label class="form-label">Название</label>
+                    <label class="form-label" id="nameLabel">Название</label>
                     <input type="text" class="form-input" id="bookmarkName" placeholder="Введите название" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">URL</label>
+                    <label class="form-label" id="urlLabel">URL</label>
                     <input type="url" class="form-input" id="bookmarkUrl" placeholder="https://example.com" required>
                 </div>
                 <div class="form-buttons">
-                    <button type="button" class="btn btn-secondary" onclick="hideModal()">Отмена</button>
+                    <button type="button" class="btn btn-secondary" onclick="hideModal()" id="cancelButton">Отмена</button>
                     <button type="submit" class="btn btn-primary" id="modalSubmit">Добавить</button>
                 </div>
             </form>
         </div>
     </div>
 
+    <!-- Modal для выбора языка -->
+    <div class="modal" id="languageModal">
+        <div class="modal-content">
+            <div class="modal-title" id="languageModalTitle">Выбор языка</div>
+            
+            <div class="language-options">
+                <div class="language-option" onclick="changeLanguage('en')">
+                    English
+                </div>
+                <div class="language-option active" onclick="changeLanguage('ru')">
+                    Русский
+                </div>
+                <div class="language-option" onclick="changeLanguage('uk')">
+                    Українська
+                </div>
+            </div>
+
+            <div class="form-buttons">
+                <button type="button" class="btn btn-secondary" onclick="hideLanguageModal()" id="closeLanguageButton">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal для кастомизации -->
     <div class="modal" id="customizationModal">
         <div class="modal-content">
-            <div class="modal-title">Настройки FlySearch</div>
+            <div class="modal-title" id="settingsTitle">Настройки FlySearch</div>
             
             <div class="settings-section">
                 <div class="settings-title">🎨 Цветовая тема</div>
@@ -792,7 +888,7 @@
             </div>
 
             <div class="form-buttons">
-                <button type="button" class="btn btn-secondary" onclick="hideCustomizationModal()">Закрыть</button>
+                <button type="button" class="btn btn-secondary" onclick="hideCustomizationModal()" id="closeSettingsButton">Закрыть</button>
             </div>
             
             <!-- Подпись -->
@@ -808,9 +904,167 @@
         let currentBackgroundType = 'gradient';
         let currentBackgroundUrl = '';
         let currentGradient = 'linear-gradient(135deg, #434343 0%, #000000 100%)';
+        let currentLanguage = 'ru'; // По умолчанию русский
+
+        // Тексты для разных языков
+        const translations = {
+            en: {
+                subtitle: "Fast and elegant",
+                searchPlaceholder: "Search the web or enter URL",
+                addBookmark: "Add",
+                addBookmarkTitle: "Add Bookmark",
+                editBookmarkTitle: "Edit Bookmark",
+                nameLabel: "Name",
+                urlLabel: "URL",
+                cancelButton: "Cancel",
+                addButton: "Add",
+                saveButton: "Save",
+                languageButton: "🌐 Language",
+                settingsButton: "FlySearch Settings",
+                languageModalTitle: "Language Selection",
+                closeLanguageButton: "Close",
+                settingsTitle: "FlySearch Settings",
+                closeSettingsButton: "Close",
+                deleteConfirm: "Delete this bookmark?",
+                gradientApplied: "Gradient applied successfully!",
+                backgroundApplied: "Background applied successfully!",
+                chooseFileOrUrl: "Please choose a file or enter URL",
+                resetConfirm: "Reset all settings to default values?",
+                resetDone: "Settings reset!",
+                bookmarksImported: "Bookmarks imported successfully!",
+                fileError: "File format error",
+                readError: "Error reading file",
+                imageError: "Error loading image",
+                videoError: "Error loading video"
+            },
+            ru: {
+                subtitle: "Быстрый и элегантный",
+                searchPlaceholder: "Поиск в интернете или введите URL",
+                addBookmark: "Добавить",
+                addBookmarkTitle: "Добавить закладку",
+                editBookmarkTitle: "Редактировать закладку",
+                nameLabel: "Название",
+                urlLabel: "URL",
+                cancelButton: "Отмена",
+                addButton: "Добавить",
+                saveButton: "Сохранить",
+                languageButton: "🌐 Язык",
+                settingsButton: "Настройки FlySearch",
+                languageModalTitle: "Выбор языка",
+                closeLanguageButton: "Закрыть",
+                settingsTitle: "Настройки FlySearch",
+                closeSettingsButton: "Закрыть",
+                deleteConfirm: "Удалить эту закладку?",
+                gradientApplied: "Градиент успешно применён!",
+                backgroundApplied: "Фон успешно применён!",
+                chooseFileOrUrl: "Пожалуйста, выберите файл или введите URL",
+                resetConfirm: "Сбросить все настройки к значениям по умолчанию?",
+                resetDone: "Настройки сброшены!",
+                bookmarksImported: "Закладки успешно импортированы!",
+                fileError: "Неверный формат файла",
+                readError: "Ошибка при чтении файла",
+                imageError: "Ошибка загрузки изображения",
+                videoError: "Ошибка загрузки видео"
+            },
+            uk: {
+                subtitle: "Швидкий та елегантний",
+                searchPlaceholder: "Пошук в інтернеті або введіть URL",
+                addBookmark: "Додати",
+                addBookmarkTitle: "Додати закладку",
+                editBookmarkTitle: "Редагувати закладку",
+                nameLabel: "Назва",
+                urlLabel: "URL",
+                cancelButton: "Скасувати",
+                addButton: "Додати",
+                saveButton: "Зберегти",
+                languageButton: "🌐 Мова",
+                settingsButton: "Налаштування FlySearch",
+                languageModalTitle: "Вибір мови",
+                closeLanguageButton: "Закрити",
+                settingsTitle: "Налаштування FlySearch",
+                closeSettingsButton: "Закрити",
+                deleteConfirm: "Видалити цю закладку?",
+                gradientApplied: "Градієнт успішно застосовано!",
+                backgroundApplied: "Фон успішно застосовано!",
+                chooseFileOrUrl: "Будь ласка, виберіть файл або введіть URL",
+                resetConfirm: "Скинути всі налаштування до значень за замовчуванням?",
+                resetDone: "Налаштування скинуто!",
+                bookmarksImported: "Закладки успішно імпортовано!",
+                fileError: "Невірний формат файлу",
+                readError: "Помилка при читанні файлу",
+                imageError: "Помилка завантаження зображення",
+                videoError: "Помилка завантаження відео"
+            }
+        };
+
+        // Функция смены языка
+        function changeLanguage(lang) {
+            currentLanguage = lang;
+            localStorage.setItem('flybrowser_language', lang);
+            applyLanguage();
+            updateLanguageModal();
+            hideLanguageModal();
+        }
+
+        // Применение текущего языка
+        function applyLanguage() {
+            const t = translations[currentLanguage];
+            
+            // Обновляем тексты
+            document.getElementById('subtitle').textContent = t.subtitle;
+            document.getElementById('searchInput').placeholder = t.searchPlaceholder;
+            document.getElementById('addBookmarkText').textContent = t.addBookmark;
+            document.getElementById('nameLabel').textContent = t.nameLabel;
+            document.getElementById('urlLabel').textContent = t.urlLabel;
+            document.getElementById('cancelButton').textContent = t.cancelButton;
+            document.querySelector('.language-btn').textContent = t.languageButton;
+            document.getElementById('settingsButton').textContent = t.settingsButton;
+            document.getElementById('languageModalTitle').textContent = t.languageModalTitle;
+            document.getElementById('closeLanguageButton').textContent = t.closeLanguageButton;
+            document.getElementById('settingsTitle').textContent = t.settingsTitle;
+            document.getElementById('closeSettingsButton').textContent = t.closeSettingsButton;
+            
+            // Обновляем кнопку в модальном окне закладок
+            if (editingBookmarkId !== null) {
+                document.getElementById('modalTitle').textContent = t.editBookmarkTitle;
+                document.getElementById('modalSubmit').textContent = t.saveButton;
+            } else {
+                document.getElementById('modalTitle').textContent = t.addBookmarkTitle;
+                document.getElementById('modalSubmit').textContent = t.addButton;
+            }
+        }
+
+        // Обновление модального окна языка
+        function updateLanguageModal() {
+            document.querySelectorAll('.language-option').forEach(option => {
+                option.classList.remove('active');
+                const lang = option.getAttribute('onclick').match(/'([^']+)'/)[1];
+                if (lang === currentLanguage) {
+                    option.classList.add('active');
+                }
+            });
+        }
+
+        // Показать модальное окно языка
+        function showLanguageModal() {
+            updateLanguageModal();
+            document.getElementById('languageModal').style.display = 'flex';
+        }
+
+        // Скрыть модальное окно языка
+        function hideLanguageModal() {
+            document.getElementById('languageModal').style.display = 'none';
+        }
 
         // Инициализация
         document.addEventListener('DOMContentLoaded', function() {
+            // Загружаем язык из localStorage
+            const savedLanguage = localStorage.getItem('flybrowser_language');
+            if (savedLanguage) {
+                currentLanguage = savedLanguage;
+            }
+            applyLanguage();
+
             // Загружаем закладки из localStorage
             const savedBookmarks = localStorage.getItem('flybrowser_bookmarks');
             if (savedBookmarks) {
@@ -930,7 +1184,7 @@
             addButton.onclick = showAddModal;
             addButton.innerHTML = `
                 <div class="bookmark-icon">+</div>
-                <div class="bookmark-name">Добавить</div>
+                <div class="bookmark-name" id="addBookmarkText">${translations[currentLanguage].addBookmark}</div>
             `;
             grid.appendChild(addButton);
         }
@@ -948,8 +1202,8 @@
         // Показать модальное окно добавления
         function showAddModal() {
             editingBookmarkId = null;
-            document.getElementById('modalTitle').textContent = 'Добавить закладку';
-            document.getElementById('modalSubmit').textContent = 'Добавить';
+            document.getElementById('modalTitle').textContent = translations[currentLanguage].addBookmarkTitle;
+            document.getElementById('modalSubmit').textContent = translations[currentLanguage].addButton;
             document.getElementById('bookmarkForm').reset();
             document.getElementById('bookmarkModal').style.display = 'flex';
         }
@@ -959,8 +1213,8 @@
             editingBookmarkId = index;
             const bookmark = bookmarks[index];
             
-            document.getElementById('modalTitle').textContent = 'Редактировать закладку';
-            document.getElementById('modalSubmit').textContent = 'Сохранить';
+            document.getElementById('modalTitle').textContent = translations[currentLanguage].editBookmarkTitle;
+            document.getElementById('modalSubmit').textContent = translations[currentLanguage].saveButton;
             document.getElementById('bookmarkName').value = bookmark.name;
             document.getElementById('bookmarkUrl').value = bookmark.url;
             document.getElementById('bookmarkModal').style.display = 'flex';
@@ -968,7 +1222,7 @@
 
         // Удаление закладки
         function deleteBookmark(index) {
-            if (confirm('Удалить эту закладку?')) {
+            if (confirm(translations[currentLanguage].deleteConfirm)) {
                 bookmarks.splice(index, 1);
                 saveBookmarks();
                 renderBookmarks();
@@ -1301,7 +1555,7 @@
             localStorage.setItem('flybrowser_background_type', 'custom-gradient');
             localStorage.setItem('flybrowser_background_url', gradient);
             
-            alert('Градиент успешно применён!');
+            alert(translations[currentLanguage].gradientApplied);
         }
 
         // Применение фона
@@ -1324,9 +1578,9 @@
                 setBackgroundMedia(currentBackgroundType, backgroundUrl);
                 localStorage.setItem('flybrowser_background_type', currentBackgroundType);
                 localStorage.setItem('flybrowser_background_url', backgroundUrl);
-                alert('Фон успешно применён!');
+                alert(translations[currentLanguage].backgroundApplied);
             } else {
-                alert('Пожалуйста, выберите файл или введите URL');
+                alert(translations[currentLanguage].chooseFileOrUrl);
             }
         }
 
@@ -1340,7 +1594,7 @@
                 img.src = url;
                 img.className = 'background-media';
                 img.onerror = () => {
-                    alert('Ошибка загрузки изображения');
+                    alert(translations[currentLanguage].imageError);
                     clearBackground();
                 };
                 mediaContainer.appendChild(img);
@@ -1352,7 +1606,7 @@
                 video.muted = true;
                 video.loop = true;
                 video.onerror = () => {
-                    alert('Ошибка загрузки видео');
+                    alert(translations[currentLanguage].videoError);
                     clearBackground();
                 };
                 mediaContainer.appendChild(video);
@@ -1403,12 +1657,12 @@
                             bookmarks = importedBookmarks;
                             saveBookmarks();
                             renderBookmarks();
-                            alert('Закладки успешно импортированы!');
+                            alert(translations[currentLanguage].bookmarksImported);
                         } else {
-                            alert('Неверный формат файла');
+                            alert(translations[currentLanguage].fileError);
                         }
                     } catch (error) {
-                        alert('Ошибка при чтении файла');
+                        alert(translations[currentLanguage].readError);
                     }
                 };
                 
@@ -1420,12 +1674,13 @@
 
         // Сброс настроек
         function resetSettings() {
-            if (confirm('Сбросить все настройки к значениям по умолчанию?')) {
+            if (confirm(translations[currentLanguage].resetConfirm)) {
                 bookmarks = [];
                 currentTheme = 'dark';
                 currentBackgroundType = 'gradient';
                 currentBackgroundUrl = '';
                 currentGradient = 'linear-gradient(135deg, #434343 0%, #000000 100%)';
+                currentLanguage = 'ru';
                 
                 localStorage.clear();
                 renderBookmarks();
@@ -1433,8 +1688,9 @@
                 applyGradientToAll(currentGradient);
                 setGradientBackground(currentGradient);
                 updateBackgroundUI();
+                applyLanguage();
                 hideCustomizationModal();
-                alert('Настройки сброшены!');
+                alert(translations[currentLanguage].resetDone);
             }
         }
 
@@ -1445,6 +1701,9 @@
             }
             if (e.target === document.getElementById('customizationModal')) {
                 hideCustomizationModal();
+            }
+            if (e.target === document.getElementById('languageModal')) {
+                hideLanguageModal();
             }
         });
     </script>
