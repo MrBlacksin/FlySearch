@@ -1,2 +1,1711 @@
-# FlySearch
-FlySearch is a minimalist, modern, and fast search module originally designed for FlyBrowser — but fully suitable for any application or project. It provides instant search, smooth animations, a neon blue design, and an intuitive interface.
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlySearch</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #000000;
+            --bg-secondary: #1a1a1a;
+            --bg-tertiary: #2d2d2d;
+            --text-primary: #ffffff;
+            --text-secondary: #888888;
+            --accent-color: #4285f4;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --hover-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --background-gradient: linear-gradient(135deg, #434343 0%, #000000 100%);
+            --search-bg: rgba(255, 255, 255, 0.08);
+            --search-border: rgba(255, 255, 255, 0.1);
+            --bookmark-icon-bg: rgba(255, 255, 255, 0.1);
+            --bookmark-icon-border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--background-gradient);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 0.3s ease;
+            padding: 20px;
+        }
+
+        .background-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            background: rgba(0, 0, 0, 0.6);
+        }
+
+        .background-media {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -3;
+            opacity: 0.4;
+            transition: opacity 0.5s ease;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            width: 100%;
+        }
+
+        .logo {
+            font-size: 3.5rem;
+            font-weight: 300;
+            letter-spacing: -2px;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, var(--text-primary), var(--text-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            font-weight: 300;
+        }
+
+        /* Search Box */
+        .search-container {
+            margin-bottom: 30px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        .search-box {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 20px 50px 20px 50px;
+            font-size: 16px;
+            background: var(--search-bg);
+            border: 1px solid var(--search-border);
+            border-radius: 16px;
+            color: var(--text-primary);
+            outline: none;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .search-input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .search-input:focus {
+            background: var(--search-bg);
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            font-size: 18px;
+        }
+
+        .shortcut-hint {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            font-size: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+
+        /* Bookmarks */
+        .bookmarks-section {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .bookmarks-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .bookmark-item {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 120px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .bookmark-icon {
+            width: 60px;
+            height: 60px;
+            background: var(--bookmark-icon-bg);
+            border: 2px solid var(--bookmark-icon-border);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .add-bookmark .bookmark-icon {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px dashed var(--bookmark-icon-border);
+            font-size: 28px;
+            color: var(--text-secondary);
+        }
+
+        .bookmark-item:hover .bookmark-icon {
+            background: var(--hover-gradient);
+            border-color: var(--accent-color);
+            transform: translateY(-5px);
+            filter: brightness(1.1);
+            color: white;
+        }
+
+        .add-bookmark:hover .bookmark-icon {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--accent-color);
+            color: var(--text-primary);
+        }
+
+        .bookmark-name {
+            font-size: 12px;
+            color: var(--text-primary);
+            text-align: center;
+            word-break: break-word;
+            max-width: 100%;
+            line-height: 1.3;
+        }
+
+        .bookmark-url {
+            font-size: 10px;
+            color: var(--text-secondary);
+            text-align: center;
+            margin-top: 4px;
+            word-break: break-all;
+        }
+
+        /* Actions - появляются при наведении */
+        .bookmark-actions {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            display: flex;
+            gap: 4px;
+        }
+
+        .bookmark-item:hover .bookmark-actions {
+            opacity: 1;
+        }
+
+        .action-btn {
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            color: var(--text-primary);
+            font-size: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .action-btn:hover {
+            background: var(--accent-color);
+            transform: scale(1.1);
+        }
+
+        /* Bottom Buttons Container */
+        .bottom-buttons {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        /* Customization Button */
+        .customize-btn {
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-color);
+            border-radius: 25px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .customize-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Language Button */
+        .language-btn {
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-color);
+            border-radius: 25px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .language-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: rgba(40, 40, 40, 0.95);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            backdrop-filter: blur(20px);
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+            color: var(--text-primary);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: var(--accent-color);
+        }
+
+        .form-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: var(--accent-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #3367d6;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* Customization Modal */
+        .settings-section {
+            margin-bottom: 25px;
+        }
+
+        .settings-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .theme-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .theme-option {
+            padding: 15px 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid transparent;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .theme-option:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .theme-option.active {
+            border-color: var(--accent-color);
+            background: rgba(66, 133, 244, 0.2);
+        }
+
+        .background-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .background-option {
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-size: 11px;
+        }
+
+        .background-option:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .background-option.active {
+            border-color: var(--accent-color);
+            background: rgba(66, 133, 244, 0.2);
+        }
+
+        .gradient-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .color-picker-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .color-picker-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+
+        .color-picker {
+            width: 100%;
+            height: 40px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .color-picker:hover {
+            border-color: var(--accent-color);
+        }
+
+        .gradient-preview {
+            width: 100%;
+            height: 60px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border: 2px solid var(--border-color);
+            background: var(--current-gradient, linear-gradient(135deg, #434343, #000000));
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .file-input {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-input-label {
+            display: block;
+            padding: 10px;
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 12px;
+        }
+
+        .file-input-label:hover {
+            border-color: var(--accent-color);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .background-preview {
+            width: 100%;
+            height: 100px;
+            border-radius: 8px;
+            margin-top: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .background-preview img,
+        .background-preview video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .preview-placeholder {
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        /* Language Modal */
+        .language-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .language-option {
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid transparent;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .language-option:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .language-option.active {
+            border-color: var(--accent-color);
+            background: rgba(66, 133, 244, 0.2);
+        }
+
+        /* Footer signature */
+        .footer-signature {
+            text-align: center;
+            margin-top: 20px;
+            color: var(--text-secondary);
+            font-size: 12px;
+            opacity: 0.7;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                padding: 20px 15px;
+            }
+            
+            .logo {
+                font-size: 2.5rem;
+            }
+            
+            .search-input {
+                padding: 16px 45px 16px 45px;
+            }
+            
+            .bookmark-item {
+                width: 100px;
+            }
+            
+            .bookmark-icon {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+
+            .theme-options {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .gradient-controls {
+                grid-template-columns: 1fr;
+            }
+
+            .bottom-buttons {
+                flex-direction: column;
+                right: 15px;
+                bottom: 15px;
+            }
+
+            .customize-btn,
+            .language-btn {
+                padding: 10px 16px;
+                font-size: 13px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo {
+                font-size: 2rem;
+            }
+            
+            .search-input {
+                font-size: 14px;
+                padding: 14px 40px 14px 40px;
+            }
+            
+            .shortcut-hint {
+                display: none;
+            }
+            
+            .bookmark-item {
+                width: 80px;
+            }
+
+            .theme-options {
+                grid-template-columns: 1fr;
+            }
+
+            .bottom-buttons {
+                right: 10px;
+                bottom: 10px;
+            }
+
+            .customize-btn,
+            .language-btn {
+                padding: 8px 14px;
+                font-size: 12px;
+            }
+
+            .modal-content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Фоновое медиа -->
+    <div class="background-overlay"></div>
+    <div id="backgroundMedia" class="background-media"></div>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">FlySearch</div>
+            <div class="subtitle" id="subtitle">Быстрый и элегантный</div>
+        </div>
+
+        <!-- Search Box -->
+        <div class="search-container">
+            <div class="search-box">
+                <div class="search-icon">🔍</div>
+                <input type="text" class="search-input" placeholder="Поиск в интернете или введите URL" id="searchInput">
+                <div class="shortcut-hint">Ctrl+K</div>
+            </div>
+        </div>
+
+        <!-- Bookmarks -->
+        <div class="bookmarks-section">
+            <div class="bookmarks-grid" id="bookmarksGrid">
+                <!-- Только кнопка добавления -->
+                <div class="bookmark-item add-bookmark" onclick="showAddModal()">
+                    <div class="bookmark-icon">+</div>
+                    <div class="bookmark-name" id="addBookmarkText">Добавить</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Контейнер для кнопок в правом нижнем углу -->
+    <div class="bottom-buttons">
+        <button class="language-btn" onclick="showLanguageModal()">🌐 Язык</button>
+        <button class="customize-btn" onclick="showCustomizationModal()" id="settingsButton">Настройки FlySearch</button>
+    </div>
+
+    <!-- Modal для добавления/редактирования закладки -->
+    <div class="modal" id="bookmarkModal">
+        <div class="modal-content">
+            <div class="modal-title" id="modalTitle">Добавить закладку</div>
+            <form id="bookmarkForm">
+                <div class="form-group">
+                    <label class="form-label" id="nameLabel">Название</label>
+                    <input type="text" class="form-input" id="bookmarkName" placeholder="Введите название" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" id="urlLabel">URL</label>
+                    <input type="url" class="form-input" id="bookmarkUrl" placeholder="https://example.com" required>
+                </div>
+                <div class="form-buttons">
+                    <button type="button" class="btn btn-secondary" onclick="hideModal()" id="cancelButton">Отмена</button>
+                    <button type="submit" class="btn btn-primary" id="modalSubmit">Добавить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal для выбора языка -->
+    <div class="modal" id="languageModal">
+        <div class="modal-content">
+            <div class="modal-title" id="languageModalTitle">Выбор языка</div>
+            
+            <div class="language-options">
+                <div class="language-option" onclick="changeLanguage('en')">
+                    English
+                </div>
+                <div class="language-option active" onclick="changeLanguage('ru')">
+                    Русский
+                </div>
+                <div class="language-option" onclick="changeLanguage('uk')">
+                    Українська
+                </div>
+            </div>
+
+            <div class="form-buttons">
+                <button type="button" class="btn btn-secondary" onclick="hideLanguageModal()" id="closeLanguageButton">Закрыть</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal для кастомизации -->
+    <div class="modal" id="customizationModal">
+        <div class="modal-content">
+            <div class="modal-title" id="settingsTitle">Настройки FlySearch</div>
+            
+            <div class="settings-section">
+                <div class="settings-title">🎨 Цветовая тема</div>
+                <div class="theme-options">
+                    <div class="theme-option active" onclick="changeTheme('dark')">Тёмная</div>
+                    <div class="theme-option" onclick="changeTheme('blue')">Синяя</div>
+                    <div class="theme-option" onclick="changeTheme('purple')">Фиолетовая</div>
+                    <div class="theme-option" onclick="changeTheme('green')">Зелёная</div>
+                    <div class="theme-option" onclick="changeTheme('red')">Красная</div>
+                    <div class="theme-option" onclick="changeTheme('orange')">Оранжевая</div>
+                    <div class="theme-option" onclick="changeTheme('pink')">Розовая</div>
+                    <div class="theme-option" onclick="changeTheme('amoled')">AMOLED Чёрная</div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <div class="settings-title">🖼️ Фон рабочего стола</div>
+                
+                <div class="background-options">
+                    <div class="background-option active" onclick="setBackgroundType('none')">Без фона</div>
+                    <div class="background-option" onclick="setBackgroundType('gradient')">Градиент</div>
+                    <div class="background-option" onclick="setBackgroundType('custom-gradient')">Свой градиент</div>
+                    <div class="background-option" onclick="setBackgroundType('image')">Изображение</div>
+                    <div class="background-option" onclick="setBackgroundType('video')">Видео</div>
+                </div>
+
+                <!-- Секция своего градиента -->
+                <div id="customGradientSection" style="display: none;">
+                    <div class="gradient-controls">
+                        <div class="color-picker-wrapper">
+                            <div class="color-picker-label">Цвет 1</div>
+                            <input type="color" class="color-picker" id="gradientColor1" value="#434343" onchange="updateCustomGradient()">
+                        </div>
+                        <div class="color-picker-wrapper">
+                            <div class="color-picker-label">Цвет 2</div>
+                            <input type="color" class="color-picker" id="gradientColor2" value="#000000" onchange="updateCustomGradient()">
+                        </div>
+                    </div>
+                    <div class="gradient-preview" id="gradientPreview"></div>
+                    <button class="btn btn-primary" onclick="applyCustomGradient()" style="width: 100%;">
+                        Применить градиент
+                    </button>
+                </div>
+
+                <!-- Секция загрузки медиа -->
+                <div id="backgroundUploadSection" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label">Загрузить файл</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" class="file-input" id="backgroundFile" accept="image/*,video/*">
+                            <div class="file-input-label" id="backgroundFileLabel">Выберите файл</div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Или введите URL</label>
+                        <input type="text" class="form-input" id="backgroundUrl" placeholder="https://example.com/image.jpg">
+                    </div>
+
+                    <div class="background-preview" id="backgroundPreview">
+                        <div class="preview-placeholder">Предпросмотр</div>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="applyBackground()" style="width: 100%; margin-top: 10px;">
+                        Применить фон
+                    </button>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <div class="settings-title">🔧 Дополнительно</div>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <button class="btn btn-secondary" onclick="exportBookmarks()">Экспорт закладок</button>
+                    <button class="btn btn-secondary" onclick="importBookmarks()">Импорт закладок</button>
+                    <button class="btn btn-secondary" onclick="resetSettings()">Сбросить настройки</button>
+                </div>
+            </div>
+
+            <div class="form-buttons">
+                <button type="button" class="btn btn-secondary" onclick="hideCustomizationModal()" id="closeSettingsButton">Закрыть</button>
+            </div>
+            
+            <!-- Подпись -->
+            <div class="footer-signature">by MrBlacksin</div>
+        </div>
+    </div>
+
+    <script>
+        // Хранилище закладок - изначально пустое
+        let bookmarks = [];
+        let editingBookmarkId = null;
+        let currentTheme = 'dark';
+        let currentBackgroundType = 'gradient';
+        let currentBackgroundUrl = '';
+        let currentGradient = 'linear-gradient(135deg, #434343 0%, #000000 100%)';
+        let currentLanguage = 'ru'; // По умолчанию русский
+
+        // Тексты для разных языков
+        const translations = {
+            en: {
+                subtitle: "Fast and elegant",
+                searchPlaceholder: "Search the web or enter URL",
+                addBookmark: "Add",
+                addBookmarkTitle: "Add Bookmark",
+                editBookmarkTitle: "Edit Bookmark",
+                nameLabel: "Name",
+                urlLabel: "URL",
+                cancelButton: "Cancel",
+                addButton: "Add",
+                saveButton: "Save",
+                languageButton: "🌐 Language",
+                settingsButton: "FlySearch Settings",
+                languageModalTitle: "Language Selection",
+                closeLanguageButton: "Close",
+                settingsTitle: "FlySearch Settings",
+                closeSettingsButton: "Close",
+                deleteConfirm: "Delete this bookmark?",
+                gradientApplied: "Gradient applied successfully!",
+                backgroundApplied: "Background applied successfully!",
+                chooseFileOrUrl: "Please choose a file or enter URL",
+                resetConfirm: "Reset all settings to default values?",
+                resetDone: "Settings reset!",
+                bookmarksImported: "Bookmarks imported successfully!",
+                fileError: "File format error",
+                readError: "Error reading file",
+                imageError: "Error loading image",
+                videoError: "Error loading video"
+            },
+            ru: {
+                subtitle: "Быстрый и элегантный",
+                searchPlaceholder: "Поиск в интернете или введите URL",
+                addBookmark: "Добавить",
+                addBookmarkTitle: "Добавить закладку",
+                editBookmarkTitle: "Редактировать закладку",
+                nameLabel: "Название",
+                urlLabel: "URL",
+                cancelButton: "Отмена",
+                addButton: "Добавить",
+                saveButton: "Сохранить",
+                languageButton: "🌐 Язык",
+                settingsButton: "Настройки FlySearch",
+                languageModalTitle: "Выбор языка",
+                closeLanguageButton: "Закрыть",
+                settingsTitle: "Настройки FlySearch",
+                closeSettingsButton: "Закрыть",
+                deleteConfirm: "Удалить эту закладку?",
+                gradientApplied: "Градиент успешно применён!",
+                backgroundApplied: "Фон успешно применён!",
+                chooseFileOrUrl: "Пожалуйста, выберите файл или введите URL",
+                resetConfirm: "Сбросить все настройки к значениям по умолчанию?",
+                resetDone: "Настройки сброшены!",
+                bookmarksImported: "Закладки успешно импортированы!",
+                fileError: "Неверный формат файла",
+                readError: "Ошибка при чтении файла",
+                imageError: "Ошибка загрузки изображения",
+                videoError: "Ошибка загрузки видео"
+            },
+            uk: {
+                subtitle: "Швидкий та елегантний",
+                searchPlaceholder: "Пошук в інтернеті або введіть URL",
+                addBookmark: "Додати",
+                addBookmarkTitle: "Додати закладку",
+                editBookmarkTitle: "Редагувати закладку",
+                nameLabel: "Назва",
+                urlLabel: "URL",
+                cancelButton: "Скасувати",
+                addButton: "Додати",
+                saveButton: "Зберегти",
+                languageButton: "🌐 Мова",
+                settingsButton: "Налаштування FlySearch",
+                languageModalTitle: "Вибір мови",
+                closeLanguageButton: "Закрити",
+                settingsTitle: "Налаштування FlySearch",
+                closeSettingsButton: "Закрити",
+                deleteConfirm: "Видалити цю закладку?",
+                gradientApplied: "Градієнт успішно застосовано!",
+                backgroundApplied: "Фон успішно застосовано!",
+                chooseFileOrUrl: "Будь ласка, виберіть файл або введіть URL",
+                resetConfirm: "Скинути всі налаштування до значень за замовчуванням?",
+                resetDone: "Налаштування скинуто!",
+                bookmarksImported: "Закладки успішно імпортовано!",
+                fileError: "Невірний формат файлу",
+                readError: "Помилка при читанні файлу",
+                imageError: "Помилка завантаження зображення",
+                videoError: "Помилка завантаження відео"
+            }
+        };
+
+        // Функция смены языка
+        function changeLanguage(lang) {
+            currentLanguage = lang;
+            localStorage.setItem('flybrowser_language', lang);
+            applyLanguage();
+            updateLanguageModal();
+            hideLanguageModal();
+        }
+
+        // Применение текущего языка
+        function applyLanguage() {
+            const t = translations[currentLanguage];
+            
+            // Обновляем тексты
+            document.getElementById('subtitle').textContent = t.subtitle;
+            document.getElementById('searchInput').placeholder = t.searchPlaceholder;
+            document.getElementById('addBookmarkText').textContent = t.addBookmark;
+            document.getElementById('nameLabel').textContent = t.nameLabel;
+            document.getElementById('urlLabel').textContent = t.urlLabel;
+            document.getElementById('cancelButton').textContent = t.cancelButton;
+            document.querySelector('.language-btn').textContent = t.languageButton;
+            document.getElementById('settingsButton').textContent = t.settingsButton;
+            document.getElementById('languageModalTitle').textContent = t.languageModalTitle;
+            document.getElementById('closeLanguageButton').textContent = t.closeLanguageButton;
+            document.getElementById('settingsTitle').textContent = t.settingsTitle;
+            document.getElementById('closeSettingsButton').textContent = t.closeSettingsButton;
+            
+            // Обновляем кнопку в модальном окне закладок
+            if (editingBookmarkId !== null) {
+                document.getElementById('modalTitle').textContent = t.editBookmarkTitle;
+                document.getElementById('modalSubmit').textContent = t.saveButton;
+            } else {
+                document.getElementById('modalTitle').textContent = t.addBookmarkTitle;
+                document.getElementById('modalSubmit').textContent = t.addButton;
+            }
+        }
+
+        // Обновление модального окна языка
+        function updateLanguageModal() {
+            document.querySelectorAll('.language-option').forEach(option => {
+                option.classList.remove('active');
+                const lang = option.getAttribute('onclick').match(/'([^']+)'/)[1];
+                if (lang === currentLanguage) {
+                    option.classList.add('active');
+                }
+            });
+        }
+
+        // Показать модальное окно языка
+        function showLanguageModal() {
+            updateLanguageModal();
+            document.getElementById('languageModal').style.display = 'flex';
+        }
+
+        // Скрыть модальное окно языка
+        function hideLanguageModal() {
+            document.getElementById('languageModal').style.display = 'none';
+        }
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', function() {
+            // Загружаем язык из localStorage
+            const savedLanguage = localStorage.getItem('flybrowser_language');
+            if (savedLanguage) {
+                currentLanguage = savedLanguage;
+            }
+            applyLanguage();
+
+            // Загружаем закладки из localStorage
+            const savedBookmarks = localStorage.getItem('flybrowser_bookmarks');
+            if (savedBookmarks) {
+                bookmarks = JSON.parse(savedBookmarks);
+                renderBookmarks();
+            }
+
+            // Загружаем тему
+            const savedTheme = localStorage.getItem('flybrowser_theme');
+            if (savedTheme) {
+                changeTheme(savedTheme, false);
+            }
+
+            // Загружаем градиент
+            const savedGradient = localStorage.getItem('flybrowser_gradient');
+            if (savedGradient) {
+                currentGradient = savedGradient;
+                applyGradientToAll(currentGradient);
+            }
+
+            // Загружаем фон
+            const savedBackgroundType = localStorage.getItem('flybrowser_background_type');
+            const savedBackgroundUrl = localStorage.getItem('flybrowser_background_url');
+            
+            if (savedBackgroundType) {
+                currentBackgroundType = savedBackgroundType;
+                if (savedBackgroundUrl) {
+                    currentBackgroundUrl = savedBackgroundUrl;
+                    if (savedBackgroundType === 'gradient' || savedBackgroundType === 'custom-gradient') {
+                        setGradientBackground(savedBackgroundUrl);
+                    } else {
+                        setBackgroundMedia(savedBackgroundType, savedBackgroundUrl);
+                    }
+                }
+            }
+
+            document.getElementById('searchInput').focus();
+
+            // Настройка обработчиков файлов
+            setupFileHandlers();
+
+            // Инициализация градиента по умолчанию
+            updateCustomGradient();
+        });
+
+        // Настройка обработчиков файлов
+        function setupFileHandlers() {
+            const backgroundFileInput = document.getElementById('backgroundFile');
+            const backgroundFileLabel = document.getElementById('backgroundFileLabel');
+            
+            backgroundFileInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    backgroundFileLabel.textContent = this.files[0].name;
+                    previewBackgroundFile(this.files[0]);
+                } else {
+                    backgroundFileLabel.textContent = 'Выберите файл';
+                }
+            });
+
+            document.getElementById('backgroundUrl').addEventListener('input', function() {
+                if (this.value.trim()) {
+                    previewBackgroundUrl(this.value.trim());
+                }
+            });
+        }
+
+        // Предпросмотр файла фона
+        function previewBackgroundFile(file) {
+            const preview = document.getElementById('backgroundPreview');
+            const url = URL.createObjectURL(file);
+            
+            if (file.type.startsWith('image/')) {
+                preview.innerHTML = `<img src="${url}" alt="Preview">`;
+            } else if (file.type.startsWith('video/')) {
+                preview.innerHTML = `<video autoplay muted loop><source src="${url}"></video>`;
+            }
+        }
+
+        // Предпросмотр URL фона
+        function previewBackgroundUrl(url) {
+            const preview = document.getElementById('backgroundPreview');
+            
+            if (url.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
+                preview.innerHTML = `<img src="${url}" alt="Preview" onerror="this.style.display='none'">`;
+            } else if (url.match(/\.(mp4|webm|ogg)$/i)) {
+                preview.innerHTML = `<video autoplay muted loop><source src="${url}"></video>`;
+            }
+        }
+
+        // Рендер закладок
+        function renderBookmarks() {
+            const grid = document.getElementById('bookmarksGrid');
+            
+            // Очищаем все
+            grid.innerHTML = '';
+            
+            // Добавляем закладки пользователя
+            bookmarks.forEach((bookmark, index) => {
+                const bookmarkElement = document.createElement('div');
+                bookmarkElement.className = 'bookmark-item';
+                bookmarkElement.innerHTML = `
+                    <div class="bookmark-actions">
+                        <button class="action-btn edit-btn" onclick="event.stopPropagation(); editBookmark(${index})">✏️</button>
+                        <button class="action-btn delete-btn" onclick="event.stopPropagation(); deleteBookmark(${index})">🗑️</button>
+                    </div>
+                    <div class="bookmark-icon">${getFirstLetter(bookmark.name)}</div>
+                    <div class="bookmark-name">${bookmark.name}</div>
+                    <div class="bookmark-url">${bookmark.url.replace(/^https?:\/\//, '').replace(/\/$/, '')}</div>
+                `;
+                bookmarkElement.onclick = () => openBookmark(bookmark.url);
+                grid.appendChild(bookmarkElement);
+            });
+            
+            // Добавляем кнопку добавления в конец
+            const addButton = document.createElement('div');
+            addButton.className = 'bookmark-item add-bookmark';
+            addButton.onclick = showAddModal;
+            addButton.innerHTML = `
+                <div class="bookmark-icon">+</div>
+                <div class="bookmark-name" id="addBookmarkText">${translations[currentLanguage].addBookmark}</div>
+            `;
+            grid.appendChild(addButton);
+        }
+
+        // Получение первой буквы названия
+        function getFirstLetter(name) {
+            return name.charAt(0).toUpperCase();
+        }
+
+        // Открытие закладки
+        function openBookmark(url) {
+            window.open(url, '_blank');
+        }
+
+        // Показать модальное окно добавления
+        function showAddModal() {
+            editingBookmarkId = null;
+            document.getElementById('modalTitle').textContent = translations[currentLanguage].addBookmarkTitle;
+            document.getElementById('modalSubmit').textContent = translations[currentLanguage].addButton;
+            document.getElementById('bookmarkForm').reset();
+            document.getElementById('bookmarkModal').style.display = 'flex';
+        }
+
+        // Редактирование закладки
+        function editBookmark(index) {
+            editingBookmarkId = index;
+            const bookmark = bookmarks[index];
+            
+            document.getElementById('modalTitle').textContent = translations[currentLanguage].editBookmarkTitle;
+            document.getElementById('modalSubmit').textContent = translations[currentLanguage].saveButton;
+            document.getElementById('bookmarkName').value = bookmark.name;
+            document.getElementById('bookmarkUrl').value = bookmark.url;
+            document.getElementById('bookmarkModal').style.display = 'flex';
+        }
+
+        // Удаление закладки
+        function deleteBookmark(index) {
+            if (confirm(translations[currentLanguage].deleteConfirm)) {
+                bookmarks.splice(index, 1);
+                saveBookmarks();
+                renderBookmarks();
+            }
+        }
+
+        // Скрыть модальное окно
+        function hideModal() {
+            document.getElementById('bookmarkModal').style.display = 'none';
+        }
+
+        // Обработка формы закладки
+        document.getElementById('bookmarkForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('bookmarkName').value.trim();
+            let url = document.getElementById('bookmarkUrl').value.trim();
+            
+            // Добавляем протокол если отсутствует
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                url = 'https://' + url;
+            }
+            
+            if (editingBookmarkId !== null) {
+                // Редактирование существующей закладки
+                bookmarks[editingBookmarkId] = { name, url };
+            } else {
+                // Добавление новой закладки
+                bookmarks.push({ name, url });
+            }
+            
+            saveBookmarks();
+            renderBookmarks();
+            hideModal();
+        });
+
+        // Сохранение в localStorage
+        function saveBookmarks() {
+            localStorage.setItem('flybrowser_bookmarks', JSON.stringify(bookmarks));
+        }
+
+        // Поиск - теперь в текущей вкладке
+        function performSearch() {
+            const query = document.getElementById('searchInput').value.trim();
+            if (query) {
+                if (query.includes('.') || query.startsWith('http://') || query.startsWith('https://')) {
+                    let url = query;
+                    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                        url = 'https://' + url;
+                    }
+                    // Открываем в текущей вкладке
+                    window.location.href = url;
+                } else {
+                    const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+                    // Открываем в текущей вкладке
+                    window.location.href = searchUrl;
+                }
+            }
+        }
+
+        // Обработка Enter в поле поиска
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+
+        // Горячие клавиши
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                document.getElementById('searchInput').focus();
+                document.getElementById('searchInput').select();
+            }
+        });
+
+        // Кастомизация
+        function showCustomizationModal() {
+            document.getElementById('customizationModal').style.display = 'flex';
+            updateBackgroundUI();
+        }
+
+        function hideCustomizationModal() {
+            document.getElementById('customizationModal').style.display = 'none';
+        }
+
+        // Смена темы
+        function changeTheme(theme, save = true) {
+            currentTheme = theme;
+            
+            // Обновляем активную тему в UI
+            document.querySelectorAll('.theme-option').forEach(option => {
+                option.classList.remove('active');
+            });
+            
+            const themeNames = {
+                'dark': 'Тёмная',
+                'blue': 'Синяя',
+                'purple': 'Фиолетовая',
+                'green': 'Зелёная',
+                'red': 'Красная',
+                'orange': 'Оранжевая',
+                'pink': 'Розовая',
+                'amoled': 'AMOLED Чёрная'
+            };
+            
+            document.querySelectorAll('.theme-option').forEach(option => {
+                if (option.textContent === themeNames[theme]) {
+                    option.classList.add('active');
+                }
+            });
+            
+            // Применяем тему
+            const root = document.documentElement;
+            
+            switch(theme) {
+                case 'dark':
+                    root.style.setProperty('--bg-primary', '#0f0f0f');
+                    root.style.setProperty('--bg-secondary', '#1a1a1a');
+                    root.style.setProperty('--bg-tertiary', '#2d2d2d');
+                    root.style.setProperty('--text-primary', '#ffffff');
+                    root.style.setProperty('--text-secondary', '#a0a0a0');
+                    root.style.setProperty('--accent-color', '#4285f4');
+                    root.style.setProperty('--border-color', 'rgba(255, 255, 255, 0.15)');
+                    root.style.setProperty('--background-gradient', 'linear-gradient(135deg, #434343 0%, #000000 100%)');
+                    root.style.setProperty('--hover-gradient', 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)');
+                    root.style.setProperty('--search-bg', 'rgba(255, 255, 255, 0.08)');
+                    root.style.setProperty('--search-border', 'rgba(255, 255, 255, 0.1)');
+                    root.style.setProperty('--bookmark-icon-bg', 'rgba(255, 255, 255, 0.1)');
+                    root.style.setProperty('--bookmark-icon-border', 'rgba(255, 255, 255, 0.1)');
+                    break;
+                case 'blue':
+                    root.style.setProperty('--bg-primary', '#0d1b2a');
+                    root.style.setProperty('--bg-secondary', '#1b263b');
+                    root.style.setProperty('--bg-tertiary', '#415a77');
+                    root.style.setProperty('--text-primary', '#e0e1dd');
+                    root.style.setProperty('--text-secondary', '#778da9');
+                    root.style.setProperty('--accent-color', '#4cc9f0');
+                    root.style.setProperty('--border-color', 'rgba(76, 201, 240, 0.3)');
+                    root.style.setProperty('--background-gradient', 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)');
+                    root.style.setProperty('--hover-gradient', 'linear-gradient(135deg, #4cc9f0 0%, #4361ee 100%)');
+                    root.style.setProperty('--search-bg', 'rgba(255, 255, 255, 0.08)');
+                    root.style.setProperty('--search-border', 'rgba(76, 201, 240, 0.3)');
+                    root.style.setProperty('--bookmark-icon-bg', 'rgba(255, 255, 255, 0.1)');
+                    root.style.setProperty('--bookmark-icon-border', 'rgba(76, 201, 240, 0.3)');
+                    break;
+                case 'purple':
+                    root.style.setProperty('--bg-primary', '#1a1a2e');
+                    root.style.setProperty('--bg-secondary', '#16213e');
+                    root.style.setProperty('--bg-tertiary', '#0f3460');
+                    root.style.setProperty('--text-primary', '#e0e0e0');
+                    root.style.setProperty('--text-secondary', '#b0b0b0');
+                    root.style.setProperty('--accent-color', '#e94560');
+                    root.style.setProperty('--border-color', 'rgba(233, 69, 96, 0.3)');
+                    root.style.setProperty('--background-gradient', 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)');
+                    root.style.setProperty('--hover-gradient', 'linear-gradient(135deg, #e94560 0%, #764ba2 100%)');
+                    root.style.setProperty('--search-bg', 'rgba(255, 255, 255, 0.08)');
+                    root.style.setProperty('--search-border', 'rgba(233, 69, 96, 0.3)');
+                    root.style.setProperty('--bookmark-icon-bg', 'rgba(255, 255, 255, 0.1)');
+                    root.style.setProperty('--bookmark-icon-border', 'rgba(233, 69, 96, 0.3)');
+                    break;
+                case 'green':
+                    root.style.setProperty('--bg-primary', '#1b4332');
+                    root.style.setProperty('--bg-secondary', '#2d6a4f');
+                    root.style.setProperty('--bg-tertiary', '#40916c');
+                    root.style.setProperty('--text-primary', '#d8f3dc');
+                    root.style.setProperty('--text-secondary', '#b7e4c7');
+                    root.style.setProperty('--accent-color', '#52b788');
+                    root.style.setProperty('--border-color', 'rgba(82, 183, 136, 0.3)');
+                    root.style.setProperty('--background-gradient', 'linear-gradient(135deg, #2d6a4f 0%, #1b4332 100%)');
+                    root.style.setProperty('--hover-gradient', 'linear-gradient(135deg, #52b788 0%, #40916c 100%)');
+                    root.style.setProperty('--search-bg', 'rgba(255, 255, 255, 0.08)');
+                    root.style.setProperty('--search-border', 'rgba(82, 183, 136, 0.3)');
+                    root.style.setProperty('--bookmark-icon-bg', 'rgba(255, 255, 255, 0.1)');
+                    root.style.setProperty('--bookmark-icon-border', 'rgba(82, 183, 136, 0.3)');
+                    break;
+                case 'red':
+                    root.style.setProperty('--bg-primary', '#2a0f0f');
+                    root.style.setProperty('--bg-secondary', '#3d1a1a');
+                    root.style.setProperty('--bg-tertiary', '#5d2a2a');
+                    root.style.setProperty('--text-primary', '#ffffff');
+                    root.style.setProperty('--text-secondary', '#ff9999');
+                    root.style.setProperty('--accent-color', '#ff4444');
+                    root.style.setProperty('--border-color', 'rgba(255, 68, 68, 0.3)');
+                    root.style.setProperty('--background-gradient', 'linear-gradient(135deg, #5d2a2a 0%, #2a0f0f 100%)');
+                    root.style.setProperty('--hover-gradient', 'linear-gradient(135deg, #ff4444 0%, #cc0000 100%)');
+                    root.style.setProperty('--search-bg', 'rgba(255, 255, 255, 0.08)');
+                    root.style.setProperty('--search-border', 'rgba(255, 68, 68, 0.3)');
+                    root.style.setProperty('--bookmark-icon-bg', 'rgba(255, 255, 255, 0.1)');
+                    root.style.setProperty('--bookmark-icon-border', 'rgba(255, 68, 68, 0.3)');
+                    break;
+                case 'orange':
+                    root.style.setProperty('--bg-primary', '#2a1f0f');
+                    root.style.setProperty('--bg-secondary', '#3d2a1a');
+                    root.style.setProperty('--bg-tertiary', '#5d3d2a');
+                    root.style.setProperty('--text-primary', '#ffffff');
+                    root.style.setProperty('--text-secondary', '#ffcc99');
+                    root.style.setProperty('--accent-color', '#ff8800');
+                    root.style.setProperty('--border-color', 'rgba(255, 136, 0, 0.3)');
+                    root.style.setProperty('--background-gradient', 'linear-gradient(135deg, #5d3d2a 0%, #2a1f0f 100%)');
+                    root.style.setProperty('--hover-gradient', 'linear-gradient(135deg, #ff8800 0%, #cc6600 100%)');
+                    root.style.setProperty('--search-bg', 'rgba(255, 255, 255, 0.08)');
+                    root.style.setProperty('--search-border', 'rgba(255, 136, 0, 0.3)');
+                    root.style.setProperty('--bookmark-icon-bg', 'rgba(255, 255, 255, 0.1)');
+                    root.style.setProperty('--bookmark-icon-border', 'rgba(255, 136, 0, 0.3)');
+                    break;
+                case 'pink':
+                    root.style.setProperty('--bg-primary', '#2a0f2a');
+                    root.style.setProperty('--bg-secondary', '#3d1a3d');
+                    root.style.setProperty('--bg-tertiary', '#5d2a5d');
+                    root.style.setProperty('--text-primary', '#ffffff');
+                    root.style.setProperty('--text-secondary', '#ff99ff');
+                    root.style.setProperty('--accent-color', '#ff44ff');
+                    root.style.setProperty('--border-color', 'rgba(255, 68, 255, 0.3)');
+                    root.style.setProperty('--background-gradient', 'linear-gradient(135deg, #5d2a5d 0%, #2a0f2a 100%)');
+                    root.style.setProperty('--hover-gradient', 'linear-gradient(135deg, #ff44ff 0%, #cc00cc 100%)');
+                    root.style.setProperty('--search-bg', 'rgba(255, 255, 255, 0.08)');
+                    root.style.setProperty('--search-border', 'rgba(255, 68, 255, 0.3)');
+                    root.style.setProperty('--bookmark-icon-bg', 'rgba(255, 255, 255, 0.1)');
+                    root.style.setProperty('--bookmark-icon-border', 'rgba(255, 68, 255, 0.3)');
+                    break;
+                case 'amoled':
+                    root.style.setProperty('--bg-primary', '#000000');
+                    root.style.setProperty('--bg-secondary', '#000000');
+                    root.style.setProperty('--bg-tertiary', '#111111');
+                    root.style.setProperty('--text-primary', '#ffffff');
+                    root.style.setProperty('--text-secondary', '#888888');
+                    root.style.setProperty('--accent-color', '#bb86fc');
+                    root.style.setProperty('--border-color', 'rgba(187, 134, 252, 0.3)');
+                    root.style.setProperty('--background-gradient', 'linear-gradient(135deg, #000000 0%, #1a1a1a 100%)');
+                    root.style.setProperty('--hover-gradient', 'linear-gradient(135deg, #bb86fc 0%, #3700b3 100%)');
+                    root.style.setProperty('--search-bg', 'rgba(255, 255, 255, 0.08)');
+                    root.style.setProperty('--search-border', 'rgba(187, 134, 252, 0.3)');
+                    root.style.setProperty('--bookmark-icon-bg', 'rgba(255, 255, 255, 0.1)');
+                    root.style.setProperty('--bookmark-icon-border', 'rgba(187, 134, 252, 0.3)');
+                    break;
+            }
+            
+            // Применяем градиент ко всем элементам
+            applyGradientToAll(getComputedStyle(root).getPropertyValue('--background-gradient').trim());
+            
+            if (save) {
+                localStorage.setItem('flybrowser_theme', theme);
+            }
+        }
+
+        // Применение градиента ко всем элементам
+        function applyGradientToAll(gradient) {
+            const root = document.documentElement;
+            root.style.setProperty('--background-gradient', gradient);
+            
+            // Обновляем фон body
+            document.body.style.background = gradient;
+        }
+
+        // Установка типа фона
+        function setBackgroundType(type) {
+            currentBackgroundType = type;
+            updateBackgroundUI();
+            
+            if (type === 'none') {
+                clearBackground();
+                localStorage.setItem('flybrowser_background_type', 'none');
+                localStorage.removeItem('flybrowser_background_url');
+            } else if (type === 'gradient') {
+                const currentGradient = getComputedStyle(document.documentElement).getPropertyValue('--background-gradient').trim();
+                setGradientBackground(currentGradient);
+                localStorage.setItem('flybrowser_background_type', 'gradient');
+                localStorage.setItem('flybrowser_background_url', currentGradient);
+            } else if (type === 'custom-gradient') {
+                // Уже применяется через applyCustomGradient
+            }
+        }
+
+        // Обновление UI фона
+        function updateBackgroundUI() {
+            // Обновляем активные кнопки
+            document.querySelectorAll('.background-option').forEach(option => {
+                option.classList.remove('active');
+            });
+            
+            const activeText = 
+                currentBackgroundType === 'none' ? 'Без фона' :
+                currentBackgroundType === 'gradient' ? 'Градиент' :
+                currentBackgroundType === 'custom-gradient' ? 'Свой градиент' :
+                currentBackgroundType === 'image' ? 'Изображение' : 'Видео';
+            
+            document.querySelectorAll('.background-option').forEach(option => {
+                if (option.textContent === activeText) {
+                    option.classList.add('active');
+                }
+            });
+            
+            // Показываем/скрываем секции
+            const customGradientSection = document.getElementById('customGradientSection');
+            const uploadSection = document.getElementById('backgroundUploadSection');
+            
+            if (currentBackgroundType === 'custom-gradient') {
+                customGradientSection.style.display = 'block';
+                uploadSection.style.display = 'none';
+            } else if (currentBackgroundType === 'image' || currentBackgroundType === 'video') {
+                customGradientSection.style.display = 'none';
+                uploadSection.style.display = 'block';
+            } else {
+                customGradientSection.style.display = 'none';
+                uploadSection.style.display = 'none';
+            }
+        }
+
+        // Обновление кастомного градиента
+        function updateCustomGradient() {
+            const color1 = document.getElementById('gradientColor1').value;
+            const color2 = document.getElementById('gradientColor2').value;
+            const gradient = `linear-gradient(135deg, ${color1} 0%, ${color2} 100%)`;
+            
+            document.getElementById('gradientPreview').style.background = gradient;
+        }
+
+        // Применение кастомного градиента
+        function applyCustomGradient() {
+            const color1 = document.getElementById('gradientColor1').value;
+            const color2 = document.getElementById('gradientColor2').value;
+            const gradient = `linear-gradient(135deg, ${color1} 0%, ${color2} 100%)`;
+            
+            currentGradient = gradient;
+            applyGradientToAll(gradient);
+            setGradientBackground(gradient);
+            
+            localStorage.setItem('flybrowser_gradient', gradient);
+            localStorage.setItem('flybrowser_background_type', 'custom-gradient');
+            localStorage.setItem('flybrowser_background_url', gradient);
+            
+            alert(translations[currentLanguage].gradientApplied);
+        }
+
+        // Применение фона
+        function applyBackground() {
+            const fileInput = document.getElementById('backgroundFile');
+            const urlInput = document.getElementById('backgroundUrl');
+            
+            let backgroundUrl = '';
+            
+            if (fileInput.files && fileInput.files[0]) {
+                // Если файл выбран
+                const file = fileInput.files[0];
+                backgroundUrl = URL.createObjectURL(file);
+            } else if (urlInput.value.trim()) {
+                // Если URL введён
+                backgroundUrl = urlInput.value.trim();
+            }
+            
+            if (backgroundUrl) {
+                setBackgroundMedia(currentBackgroundType, backgroundUrl);
+                localStorage.setItem('flybrowser_background_type', currentBackgroundType);
+                localStorage.setItem('flybrowser_background_url', backgroundUrl);
+                alert(translations[currentLanguage].backgroundApplied);
+            } else {
+                alert(translations[currentLanguage].chooseFileOrUrl);
+            }
+        }
+
+        // Установка медиа фона
+        function setBackgroundMedia(type, url) {
+            const mediaContainer = document.getElementById('backgroundMedia');
+            mediaContainer.innerHTML = '';
+            
+            if (type === 'image') {
+                const img = document.createElement('img');
+                img.src = url;
+                img.className = 'background-media';
+                img.onerror = () => {
+                    alert(translations[currentLanguage].imageError);
+                    clearBackground();
+                };
+                mediaContainer.appendChild(img);
+            } else if (type === 'video') {
+                const video = document.createElement('video');
+                video.src = url;
+                video.className = 'background-media';
+                video.autoplay = true;
+                video.muted = true;
+                video.loop = true;
+                video.onerror = () => {
+                    alert(translations[currentLanguage].videoError);
+                    clearBackground();
+                };
+                mediaContainer.appendChild(video);
+            }
+        }
+
+        // Градиентный фон
+        function setGradientBackground(gradient) {
+            const mediaContainer = document.getElementById('backgroundMedia');
+            mediaContainer.innerHTML = '';
+            mediaContainer.style.background = gradient;
+            mediaContainer.style.opacity = '0.4';
+        }
+
+        // Очистка фона
+        function clearBackground() {
+            const mediaContainer = document.getElementById('backgroundMedia');
+            mediaContainer.innerHTML = '';
+            mediaContainer.style.background = '';
+            mediaContainer.style.opacity = '1';
+        }
+
+        // Экспорт закладок
+        function exportBookmarks() {
+            const dataStr = JSON.stringify(bookmarks, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(dataBlob);
+            link.download = 'flybrowser_bookmarks.json';
+            link.click();
+        }
+
+        // Импорт закладок
+        function importBookmarks() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            
+            input.onchange = e => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = event => {
+                    try {
+                        const importedBookmarks = JSON.parse(event.target.result);
+                        if (Array.isArray(importedBookmarks)) {
+                            bookmarks = importedBookmarks;
+                            saveBookmarks();
+                            renderBookmarks();
+                            alert(translations[currentLanguage].bookmarksImported);
+                        } else {
+                            alert(translations[currentLanguage].fileError);
+                        }
+                    } catch (error) {
+                        alert(translations[currentLanguage].readError);
+                    }
+                };
+                
+                reader.readAsText(file);
+            };
+            
+            input.click();
+        }
+
+        // Сброс настроек
+        function resetSettings() {
+            if (confirm(translations[currentLanguage].resetConfirm)) {
+                bookmarks = [];
+                currentTheme = 'dark';
+                currentBackgroundType = 'gradient';
+                currentBackgroundUrl = '';
+                currentGradient = 'linear-gradient(135deg, #434343 0%, #000000 100%)';
+                currentLanguage = 'ru';
+                
+                localStorage.clear();
+                renderBookmarks();
+                changeTheme('dark', false);
+                applyGradientToAll(currentGradient);
+                setGradientBackground(currentGradient);
+                updateBackgroundUI();
+                applyLanguage();
+                hideCustomizationModal();
+                alert(translations[currentLanguage].resetDone);
+            }
+        }
+
+        // Закрытие модальных окон по клику вне области
+        window.addEventListener('click', function(e) {
+            if (e.target === document.getElementById('bookmarkModal')) {
+                hideModal();
+            }
+            if (e.target === document.getElementById('customizationModal')) {
+                hideCustomizationModal();
+            }
+            if (e.target === document.getElementById('languageModal')) {
+                hideLanguageModal();
+            }
+        });
+    </script>
+</body>
+</html>
